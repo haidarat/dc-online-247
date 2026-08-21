@@ -36,6 +36,7 @@ const RECONNECT = {
 const state = {
   connecting    : false,
   reconnectTimer: null,
+  reconnectAt   : null,   // timestamp ที่จะ reconnect (ms)
   retryCount    : 0,
   inChannel     : false,
 };
@@ -139,10 +140,12 @@ function scheduleReconnect(guild) {
     RECONNECT.maxDelay
   );
   state.retryCount++;
+  state.reconnectAt = Date.now() + delay;  // บันทึกเวลาที่จะ reconnect
   log.info(`🔄 Reconnect in ${delay / 1000}s (attempt ${state.retryCount})`);
 
   state.reconnectTimer = setTimeout(() => {
     state.reconnectTimer = null;
+    state.reconnectAt    = null;
     connect(guild);
   }, delay);
 }
@@ -256,6 +259,8 @@ app.get('/api/stats', (_, res) => {
     ramTotalMb: (totalMem / 1024 / 1024).toFixed(0),
     uptime: Math.floor(process.uptime()),
     botUser: client.user ? client.user.tag : 'Not Logged In',
+    reconnectIn: state.reconnectAt ? Math.max(0, Math.ceil((state.reconnectAt - Date.now()) / 1000)) : null,
+    retryCount : state.retryCount,
   });
 });
 

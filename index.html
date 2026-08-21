@@ -217,6 +217,44 @@
       transition: width 0.5s ease;
     }
 
+    /* Reconnect Countdown Card */
+    .reconnect-card {
+      display: none;
+      grid-column: span 2;
+      background: rgba(239, 68, 68, 0.06);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+      border-radius: 20px;
+      padding: 20px;
+      align-items: center;
+      gap: 16px;
+      animation: borderPulse 2s infinite;
+    }
+    .reconnect-card.visible {
+      display: flex;
+    }
+    @keyframes borderPulse {
+      0%, 100% { border-color: rgba(239, 68, 68, 0.2); box-shadow: none; }
+      50%       { border-color: rgba(239, 68, 68, 0.5); box-shadow: 0 0 16px rgba(239, 68, 68, 0.15); }
+    }
+    .reconnect-icon {
+      font-size: 1.8rem;
+      animation: spin 1.5s linear infinite;
+      flex-shrink: 0;
+    }
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
+    .reconnect-text { flex: 1; }
+    .reconnect-text .card-label { color: rgba(239, 68, 68, 0.8); }
+    .reconnect-countdown {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #ef4444;
+      font-variant-numeric: tabular-nums;
+      line-height: 1;
+    }
+
     .footer {
       margin-top: 24px;
       text-align: center;
@@ -278,6 +316,15 @@
         </div>
       </div>
 
+      <!-- Reconnect Countdown (แสดงเฉพาะตอน OFFLINE) -->
+      <div class="reconnect-card" id="reconnectCard">
+        <div class="reconnect-icon">🔄</div>
+        <div class="reconnect-text">
+          <div class="card-label" id="reconnectAttempt">Reconnecting... (Attempt 1)</div>
+          <div class="reconnect-countdown" id="reconnectCountdown">--s</div>
+        </div>
+      </div>
+
       <!-- 5. Uptime Real-time Timer -->
       <div class="card card-full">
         <div class="card-label">System Uptime</div>
@@ -304,18 +351,32 @@
         const res = await fetch('/api/stats');
         const data = await res.json();
 
-        // Selective DOM Updates (Partial Update - 1s Interval)
+        // Status Badge + Reconnect Card
         const badge = document.getElementById('statusBadge');
         const statusText = document.getElementById('statusText');
+        const reconnectCard = document.getElementById('reconnectCard');
+
         if (data.online) {
           if (statusText.innerText !== 'ONLINE') {
             badge.className = 'status-badge online';
             statusText.innerText = 'ONLINE';
           }
+          reconnectCard.classList.remove('visible');
         } else {
           if (statusText.innerText !== 'OFFLINE') {
             badge.className = 'status-badge offline';
             statusText.innerText = 'OFFLINE';
+          }
+          // Reconnect countdown
+          if (data.reconnectIn !== null && data.reconnectIn > 0) {
+            reconnectCard.classList.add('visible');
+            document.getElementById('reconnectAttempt').innerText =
+              `Reconnecting... (Attempt ${data.retryCount})`;
+            document.getElementById('reconnectCountdown').innerText =
+              `${data.reconnectIn}s`;
+          } else if (data.reconnectIn === 0) {
+            reconnectCard.classList.add('visible');
+            document.getElementById('reconnectCountdown').innerText = 'Connecting...';
           }
         }
 
