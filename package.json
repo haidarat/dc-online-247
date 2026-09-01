@@ -4,10 +4,10 @@
   "description": "Selfbot auto join voice channel",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node --expose-gc index.js"
   },
   "engines": {
-    "node": "18.x"
+    "node": "22.x"
   },
   "dependencies": {
     "discord.js-selfbot-v13": "^3.7.1",

@@ -3,8 +3,16 @@ node_modules/
 
 # ─── Environment (NEVER commit your token!) ───────────────────────────────────
 .env
-.env.local
-.env.*.local
+.env.*
+!.env.example
+
+# ─── Private credentials (NEVER commit) ──────────────────────────────────────
+*.pem
+*.key
+*.p12
+*.pfx
+credentials*.json
+service-account*.json
 
 # ─── Logs ─────────────────────────────────────────────────────────────────────
 logs/

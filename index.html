@@ -277,7 +277,7 @@
     <div class="header">
       <div class="title-group">
         <h1>DC Online 24/7</h1>
-        <p id="botUser">Loading bot status...</p>
+        <p>Read-only voice status</p>
       </div>
       <div id="statusBadge" class="status-badge offline">
         <div class="status-dot"></div>
@@ -286,34 +286,15 @@
     </div>
 
     <div class="grid">
-      <!-- 1. Server Name -->
+      <!-- Public dashboard intentionally exposes no Discord account, guild, or channel data. -->
       <div class="card">
-        <div class="card-label">Server (Guild)</div>
-        <div class="card-value" id="serverName">--</div>
+        <div class="card-label">Voice connection</div>
+        <div class="card-value" id="voiceStatus">--</div>
       </div>
 
-      <!-- 2. Voice Channel Name -->
       <div class="card">
-        <div class="card-label">Voice Channel</div>
-        <div class="card-value" id="channelName">--</div>
-      </div>
-
-      <!-- 3. CPU Usage -->
-      <div class="card">
-        <div class="card-label" id="cpuModelLabel">CPU Usage</div>
-        <div class="card-value"><span id="cpuVal">0</span>%</div>
-        <div class="progress-bar">
-          <div class="progress-fill" id="cpuBar"></div>
-        </div>
-      </div>
-
-      <!-- 4. RAM Usage -->
-      <div class="card">
-        <div class="card-label">RAM Usage (Heap / System)</div>
-        <div class="card-value"><span id="ramProcVal">0</span> MB</div>
-        <div class="progress-bar">
-          <div class="progress-fill" id="ramBar"></div>
-        </div>
+        <div class="card-label">Recovery attempts</div>
+        <div class="card-value" id="retryCount">0</div>
       </div>
 
       <!-- Reconnect Countdown (แสดงเฉพาะตอน OFFLINE) -->
@@ -325,7 +306,11 @@
         </div>
       </div>
 
-      <!-- 5. Uptime Real-time Timer -->
+      <div class="card card-full">
+        <div class="card-label">Last voice event</div>
+        <div class="card-value" id="lastVoiceEvent">--</div>
+      </div>
+
       <div class="card card-full">
         <div class="card-label">System Uptime</div>
         <div class="uptime-value" id="uptimeVal">0d 0h 0m 0s</div>
@@ -333,7 +318,7 @@
     </div>
 
     <div class="footer">
-      Real-time Hyper-Glassmorphism Dashboard • Updates metrics every 1 sec
+      Read-only dashboard • Updates every 5 seconds
     </div>
   </div>
 
@@ -363,9 +348,9 @@
           }
           reconnectCard.classList.remove('visible');
         } else {
-          if (statusText.innerText !== 'OFFLINE') {
+          if (statusText.innerText !== 'RECONNECTING') {
             badge.className = 'status-badge offline';
-            statusText.innerText = 'OFFLINE';
+            statusText.innerText = data.reconnectIn !== null ? 'RECONNECTING' : 'OFFLINE';
           }
           // Reconnect countdown
           if (data.reconnectIn !== null && data.reconnectIn > 0) {
@@ -380,25 +365,9 @@
           }
         }
 
-        const botUserEl = document.getElementById('botUser');
-        if (botUserEl.innerText !== data.botUser) botUserEl.innerText = data.botUser;
-
-        const serverNameEl = document.getElementById('serverName');
-        if (serverNameEl.innerText !== data.serverName) serverNameEl.innerText = data.serverName;
-
-        const channelNameEl = document.getElementById('channelName');
-        if (channelNameEl.innerText !== data.channelName) channelNameEl.innerText = data.channelName;
-
-        // 3. CPU
-        const cpuModelEl = document.getElementById('cpuModelLabel');
-        if (data.cpuModel) {
-          cpuModelEl.innerText = `CPU Usage — ${data.cpuModel}`;
-        }
-        document.getElementById('cpuVal').innerText = data.cpu;
-        document.getElementById('cpuBar').style.width = Math.min(data.cpu, 100) + '%';
-
-        document.getElementById('ramProcVal').innerText = `${data.ramProcess} MB (${data.ramSystem}% Sys)`;
-        document.getElementById('ramBar').style.width = Math.min(data.ramSystem, 100) + '%';
+        document.getElementById('voiceStatus').innerText = data.voice || 'disconnected';
+        document.getElementById('retryCount').innerText = data.retryCount ?? 0;
+        document.getElementById('lastVoiceEvent').innerText = data.lastVoiceEvent || '--';
 
         document.getElementById('uptimeVal').innerText = formatUptime(data.uptime);
 
@@ -407,9 +376,9 @@
       }
     }
 
-    // Initial fetch and auto-refresh metrics every 1 second
+    // Read-only status; a slower interval reduces unnecessary public requests.
     fetchStats();
-    setInterval(fetchStats, 1000);
+    setInterval(fetchStats, 5000);
   </script>
 </body>
 </html>
